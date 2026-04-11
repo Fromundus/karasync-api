@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\RemoteControlEvent;
 use App\Http\Controllers\Controller;
 use App\Models\Karaoke;
 use App\Models\User;
@@ -9,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class KaraokeController extends Controller
@@ -46,6 +48,11 @@ class KaraokeController extends Controller
                 'connection_token' => Str::random(64),
                 'status' => 'active',
             ]);
+
+            broadcast(new RemoteControlEvent(
+                $karaoke->karaoke_id,
+                "register"
+            ))->toOthers();
 
             DB::commit();
         } catch (\Exception $e){
@@ -104,6 +111,11 @@ class KaraokeController extends Controller
             $karaoke->delete();
 
             DB::commit();
+
+            broadcast(new RemoteControlEvent(
+                $karaoke->karaoke_id,
+                "delete"
+            ))->toOthers();
     
             return response()->json([
                 "message" => "Karaoke delete successfully"

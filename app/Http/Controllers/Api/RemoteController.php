@@ -20,6 +20,8 @@ class RemoteController extends Controller
         // 🔍 1. Search in local database first
         $localResults = SongBook::where('title', 'like', '%' . $query . '%')
             ->orWhere('channel', 'like', '%' . $query . '%')
+            ->limit(100)
+            ->orderByDesc('created_at')
             ->get();
 
         // ✅ If found in DB, return immediately
