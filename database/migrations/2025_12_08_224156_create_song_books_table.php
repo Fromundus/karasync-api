@@ -19,6 +19,8 @@ return new class extends Migration
             $table->string("channel")->nullable();
             $table->string("status")->nullable();
             $table->string("color");
+
+            $table->timestamps();
         });
     }
 

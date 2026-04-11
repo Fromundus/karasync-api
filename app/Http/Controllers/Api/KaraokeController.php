@@ -83,8 +83,14 @@ class KaraokeController extends Controller
         }
     }
 
-    public function show($karaokeId){
+    public function scan($karaokeId){
         $karaoke = Karaoke::where('karaoke_id', $karaokeId)->where('status', 'pending')->firstOrFail();
+
+        return response()->json($karaoke);
+    }
+
+    public function show($karaokeId){
+        $karaoke = Karaoke::with('unplayedSongs')->where('karaoke_id', $karaokeId)->firstOrFail();
 
         return response()->json($karaoke);
     }

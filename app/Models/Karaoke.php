@@ -18,4 +18,8 @@ class Karaoke extends Model
     public function user(){
         return $this->belongsTo(User::class);
     }
+
+    public function unplayedSongs(){
+        return $this->hasMany(Song::class)->where('status', 'unplayed');
+    }
 }

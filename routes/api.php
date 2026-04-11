@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\MemberController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PatientController;
 use App\Http\Controllers\Api\RegisteredMemberController;
+use App\Http\Controllers\Api\RemoteController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\TicketController;
@@ -25,7 +26,7 @@ Route::middleware(['auth:sanctum'])->group(function(){
     Route::post('/logout', [AuthController::class, 'logout']);
 
     Route::prefix('/karaokes')->group(function(){
-        Route::get('/{karaokeId}', [KaraokeController::class, 'show']);
+        Route::get('/scan/{karaokeId}', [KaraokeController::class, 'scan']);
         Route::post('/register', [KaraokeController::class, 'register']);
         Route::put('/{karaokeId}', [KaraokeController::class, 'update']);
         Route::delete('/{karaoke}', [KaraokeController::class, 'delete']);
@@ -35,9 +36,15 @@ Route::middleware(['auth:sanctum'])->group(function(){
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 
-
 Route::prefix('/karaokes')->group(function(){
     Route::post('/', [KaraokeController::class, 'store']);
+    Route::get('/{karaokeId}', [KaraokeController::class, 'show']);
+    Route::get('/{karaokeId}/{connectionToken}', [KaraokeController::class, 'connectRemote']);
+});
+
+Route::prefix('/remote')->group(function(){
+    Route::get('/search', [RemoteController::class, 'search']);
+    Route::post('/reserve', [RemoteController::class, 'reserve']);
 });
 
 Route::get('/test', function(){
