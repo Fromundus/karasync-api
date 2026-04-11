@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\RemoteControlEvent;
 use App\Http\Controllers\Controller;
+use App\Models\Karaoke;
 use App\Models\Song;
 use App\Models\SongBook;
 use Exception;
@@ -101,8 +103,14 @@ class RemoteController extends Controller
             "status" => "unplayed",
         ]);
 
+        $karaoke = Karaoke::findOrFail($validated["karaoke_id"]);
+
         if($song){
             // broadcast(new KaraokeControlEvent($request->karaokeKaraokeId, "songadded"));
+            broadcast(new RemoteControlEvent(
+                $karaoke->karaoke_id,
+                "reserve"
+            ))->toOthers();
 
             return response()->json([
                 "message" => "successfully added",
@@ -126,9 +134,26 @@ class RemoteController extends Controller
             "status" => "played"
         ]);
 
+        $karaoke = Karaoke::findOrFail($validated["karaoke_id"]);
+
+        broadcast(new RemoteControlEvent(
+            $karaoke->karaoke_id,
+            "stop"
+        ))->toOthers();
+
         return response()->json([
             "message" => "success"
         ], 200);
+    }
+
+    public function remote(Request $request)
+    {
+        broadcast(new RemoteControlEvent(
+            $request->karaoke_id,
+            $request->action
+        ))->toOthers();
+
+        return response()->json(['ok' => true]);
     }
 
     private function generateRandomColor()
