@@ -114,6 +114,23 @@ class RemoteController extends Controller
         }
     }
 
+    public function next(Request $request){
+        $validated = $request->validate([
+            "karaoke_id" => "required", // karaoke.id
+            "song_id" => "required",
+        ]);
+
+        $song = Song::where("id", $validated["song_id"])->where("karaoke_id", $validated["karaoke_id"])->firstOrFail();
+
+        $song->update([
+            "status" => "played"
+        ]);
+
+        return response()->json([
+            "message" => "success"
+        ], 200);
+    }
+
     private function generateRandomColor()
     {
         return sprintf('#%06X', mt_rand(0, 0xFFFFFF));
