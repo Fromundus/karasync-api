@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
+use function PHPUnit\Framework\isEmpty;
+use function PHPUnit\Framework\isNull;
+
 class KaraokeController extends Controller
 {
     public function store(Request $request){
@@ -33,6 +36,7 @@ class KaraokeController extends Controller
         $validated = $request->validate([
             "karaoke_id" => "required|string",
             "name" => "required|string|max:100",
+            "password" => "required|string|min:6|max:6"
         ]);
 
         $karaoke = Karaoke::where('karaoke_id', $validated["karaoke_id"])->where('status', 'pending')->firstOrFail();
@@ -45,8 +49,15 @@ class KaraokeController extends Controller
             $karaoke->update([
                 'user_id' => $user->id,
                 'name' => $validated["name"],
-                'connection_token' => Str::random(64),
                 'status' => 'active',
+            ]);
+
+            User::create([
+                "karaoke_id" => $karaoke->karaoke_id,
+                "name" => $validated["name"],
+                "password" => Hash::make($validated["password"]),
+                "role" => "remote",
+                "status" => "active",
             ]);
 
             broadcast(new RemoteControlEvent(
@@ -67,9 +78,12 @@ class KaraokeController extends Controller
     public function update(Request $request, $karaokeId){
         $validated = $request->validate([
             "name" => "sometimes|string|max:100",
+            "password" => "sometimes|string|min:6|max:6"
         ]);
 
         $karaoke = Karaoke::where('karaoke_id', $karaokeId)->firstOrFail();
+
+        $remote = User::where('karaoke_id', $karaoke->karaoke_id)->firstOrFail();
 
         try {
             DB::beginTransaction();
@@ -77,6 +91,23 @@ class KaraokeController extends Controller
             $karaoke->update([
                 'name' => $validated["name"] ?? $karaoke->name,
             ]);
+
+            $remote->update([
+                'name' => $validated["name"] ?? $karaoke->name,
+            ]);
+
+            if(isset($validated["password"])){
+                Log::info('has password');
+
+                $remote->update([
+                    'password' => Hash::make($validated["password"]),
+                ]);
+
+                broadcast(new RemoteControlEvent(
+                    $karaoke->karaoke_id,
+                    "remote-logout"
+                ))->toOthers();
+            }
 
             DB::commit();
 

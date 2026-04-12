@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('karaoke_id')->unique();
             $table->string('name')->nullable();
             $table->enum('status', ['pending', 'active', 'inactive'])->default('pending');
-            $table->string('connection_token')->nullable();
-            $table->timestamp('token_expires_at')->nullable();
+            // $table->string('connection_token')->nullable();
+            // $table->timestamp('token_expires_at')->nullable();
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');

@@ -31,63 +31,10 @@ class RemoteController extends Controller
                 'data' => $localResults,
                 'source' => 'database'
             ]);
+        } else {
+            $this->searchYoutube($query);
         }
 
-        $apiKey = config('services.youtube.key');
-
-        $response = Http::get('https://www.googleapis.com/youtube/v3/search', [
-            'key' => $apiKey,
-            'part' => 'snippet',
-            'maxResults' => 5,
-            'q' => $query . 'karaoke',
-            'type' => 'video'
-        ]);
-
-        $items = $response->json()['items'];
-
-        $saved = [];
-        $result = [];
-
-        foreach ($items as $item) {
-            $videoId = $item['id']['videoId'];
-
-            // Check if song already exists
-            if (!SongBook::where('code', $videoId)->exists()) {
-                if($item['snippet']['channelId'] !== 'UCwTRjvjVge51X-ILJ4i22ew'){
-                    $song = SongBook::create([
-                        'code'      => $videoId,
-                        'thumbnail' => $item['snippet']['thumbnails']['default']['url'],
-                        'title'     => $item['snippet']['title'],
-                        'channel'   => $item['snippet']['channelTitle'],
-                        'color'     => $this->generateRandomColor(),
-                        'priority'  => null,
-                    ]);
-                    
-                    $saved[] = $song;
-                }
-                
-            }
-
-            if($item['snippet']['channelId'] !== 'UCwTRjvjVge51X-ILJ4i22ew'){
-                $updatedSongFormat = [
-                    'code'      => $videoId,
-                    'thumbnail' => $item['snippet']['thumbnails']['default']['url'],
-                    'title'     => $item['snippet']['title'],
-                    'channel'   => $item['snippet']['channelTitle'],
-                    'color'     => $this->generateRandomColor(),
-                    'priority'  => null,
-                ];
-    
-                $result[] = $updatedSongFormat;
-            }
-        }
-
-        return response()->json([
-            'message' => 'Results fetched from YouTube.',
-            'data' => $result,
-            'original_results' => $items,
-            'source' => 'youtube'
-        ]);
     }
 
     public function reserve(Request $request){
@@ -148,6 +95,27 @@ class RemoteController extends Controller
         ], 200);
     }
 
+    public function stopAll(Request $request){
+        $validated = $request->validate([
+            "karaoke_id" => "required", // karaoke.id
+        ]);
+
+        Song::where("karaoke_id", $validated["karaoke_id"])->update([
+            "status" => "played",
+        ]);
+
+        $karaoke = Karaoke::findOrFail($validated["karaoke_id"]);
+
+        broadcast(new RemoteControlEvent(
+            $karaoke->karaoke_id,
+            "stop"
+        ))->toOthers();
+
+        return response()->json([
+            "message" => "success"
+        ], 200);
+    }
+
     public function remote(Request $request)
     {
         broadcast(new RemoteControlEvent(
@@ -161,5 +129,63 @@ class RemoteController extends Controller
     private function generateRandomColor()
     {
         return sprintf('#%06X', mt_rand(0, 0xFFFFFF));
+    }
+
+    private function searchYoutube($query){
+        $apiKey = config('services.youtube.key');
+
+        $response = Http::get('https://www.googleapis.com/youtube/v3/search', [
+            'key' => $apiKey,
+            'part' => 'snippet',
+            'maxResults' => 5,
+            'q' => $query . 'karaoke',
+            'type' => 'video'
+        ]);
+
+        $items = $response->json()['items'];
+
+        $saved = [];
+        $result = [];
+
+        foreach ($items as $item) {
+            $videoId = $item['id']['videoId'];
+
+            // Check if song already exists
+            if (!SongBook::where('code', $videoId)->exists()) {
+                if($item['snippet']['channelId'] !== 'UCwTRjvjVge51X-ILJ4i22ew'){
+                    $song = SongBook::create([
+                        'code'      => $videoId,
+                        'thumbnail' => $item['snippet']['thumbnails']['default']['url'],
+                        'title'     => $item['snippet']['title'],
+                        'channel'   => $item['snippet']['channelTitle'],
+                        'color'     => $this->generateRandomColor(),
+                        'priority'  => null,
+                    ]);
+                    
+                    $saved[] = $song;
+                }
+                
+            }
+
+            if($item['snippet']['channelId'] !== 'UCwTRjvjVge51X-ILJ4i22ew'){
+                $updatedSongFormat = [
+                    'code'      => $videoId,
+                    'thumbnail' => $item['snippet']['thumbnails']['default']['url'],
+                    'title'     => $item['snippet']['title'],
+                    'channel'   => $item['snippet']['channelTitle'],
+                    'color'     => $this->generateRandomColor(),
+                    'priority'  => null,
+                ];
+    
+                $result[] = $updatedSongFormat;
+            }
+        }
+
+        return response()->json([
+            'message' => 'Results fetched from YouTube.',
+            'data' => $result,
+            'original_results' => $items,
+            'source' => 'youtube'
+        ]);
     }
 }

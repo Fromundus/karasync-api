@@ -66,6 +66,36 @@ class AuthController extends Controller
         ]);
     }
 
+    public function remoteLogin(Request $request)
+    {
+        $credentials = $request->validate([
+            'karaoke_id' => 'required|string',
+            'password' => 'required|string',
+        ]);
+
+        $user = User::where('karaoke_id', $credentials['karaoke_id'])->first();
+
+        if (! $user || ! Hash::check($credentials['password'], $user->password)) {
+            throw ValidationException::withMessages([
+                'name' => ['The provided credentials are incorrect.'],
+            ]);
+        }
+
+        if($user && $user->status !== "active"){
+            throw ValidationException::withMessages([
+                'name' => ['Inactive Account.'],
+            ]);
+        }
+
+        $token = $user->createToken('api_token')->plainTextToken;
+
+        return response()->json([
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+            'user' => $user,
+        ]);
+    }
+
     public function me(Request $request)
     {
         $user = User::with(['karaokes'])->findOrFail($request->user()->id);

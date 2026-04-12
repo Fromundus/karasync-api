@@ -11,8 +11,6 @@ class Karaoke extends Model
         'karaoke_id',
         'name',
         'status',
-        'connection_token',
-        'token_expires_at',
     ];
 
     public function user(){
@@ -21,5 +19,9 @@ class Karaoke extends Model
 
     public function unplayedSongs(){
         return $this->hasMany(Song::class)->where('status', 'unplayed');
+    }
+
+    public function remote(){
+        return $this->hasOne(User::class, 'karaoke_id', 'karaoke_id')->where('role', 'remote');
     }
 }
