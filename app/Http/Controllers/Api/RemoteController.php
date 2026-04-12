@@ -32,9 +32,28 @@ class RemoteController extends Controller
                 'source' => 'database'
             ]);
         } else {
-            $this->searchYoutube($query);
-        }
+            $result = $this->searchYoutube($query);
 
+            return response()->json([
+                'message' => 'Results fetched from YouTube.',
+                'data' => $result["data"],
+                'original_results' => $result["original_results"],
+                'source' => 'youtube'
+            ]);
+        }
+    }
+
+    public function youtubeSearch(Request $request){
+        $query = $request->input('query');
+
+        $result = $this->searchYoutube($query);
+
+        return response()->json([
+            'message' => 'Results fetched from YouTube.',
+            'data' => $result["data"],
+            'original_results' => $result["original_results"],
+            'source' => 'youtube'
+        ]);
     }
 
     public function reserve(Request $request){
@@ -181,11 +200,9 @@ class RemoteController extends Controller
             }
         }
 
-        return response()->json([
-            'message' => 'Results fetched from YouTube.',
+        return [
             'data' => $result,
             'original_results' => $items,
-            'source' => 'youtube'
-        ]);
+        ];
     }
 }

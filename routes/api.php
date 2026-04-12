@@ -46,6 +46,7 @@ Route::prefix('/karaokes')->group(function(){
 Route::prefix('/remote')->group(function(){
     Route::post('/', [RemoteController::class, 'remote']); // for the button actions
     Route::get('/search', [RemoteController::class, 'search']);
+    Route::get('/search/youtube', [RemoteController::class, 'youtubeSearch']);
     Route::post('/reserve', [RemoteController::class, 'reserve']);
     Route::put('/next', [RemoteController::class, 'next']);
     Route::put('/stop-all', [RemoteController::class, 'stopAll']);
