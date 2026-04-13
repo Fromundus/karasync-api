@@ -16,18 +16,75 @@ class RemoteController extends Controller
 {
     public function search(Request $request)
     {
+        // $query = $request->input('query');
+
+        // $words = array_filter(explode(' ', $query));
+
+        // $localResults = SongBook::query()
+        //     ->where(function ($q) use ($words) {
+        //         foreach ($words as $word) {
+        //             $q->orWhere('title', 'like', "%{$word}%");
+        //             // ->orWhere('channel', 'like', "%{$word}%");
+        //         }
+        //     })
+        //     ->orderBy('title')
+        //     ->limit(100)
+        //     ->get();
+
         $query = $request->input('query');
 
-        $words = array_filter(explode(' ', $query));
+        if (empty($query)) {
+            $localResults = SongBook::orderByDesc('created_at')
+                ->limit(100)
+                ->get();
+
+            return response()->json([
+                'message' => 'Showing latest songs.',
+                'data' => $localResults,
+                'source' => 'database'
+            ]);
+        }
+
+        $words = array_values(array_filter(explode(' ', $query)));
+
+        // Build match score (+1 per word)
+        $scoreSql = [];
+        $scoreBindings = [];
+
+        foreach ($words as $word) {
+            $scoreSql[] = "CASE WHEN title LIKE ? THEN 1 ELSE 0 END";
+            $scoreBindings[] = "%{$word}%";
+        }
+
+        $scoreExpression = implode(' + ', $scoreSql);
+
+        // Build ordered pattern: %word1%word2%word3%
+        $orderedPattern = '%' . implode('%', $words) . '%';
 
         $localResults = SongBook::query()
             ->where(function ($q) use ($words) {
                 foreach ($words as $word) {
                     $q->orWhere('title', 'like', "%{$word}%");
-                    // ->orWhere('channel', 'like', "%{$word}%");
                 }
             })
-            ->orderBy('title')
+            ->orderByRaw("
+                (
+                    CASE WHEN title = ? THEN 100 ELSE 0 END +              -- exact match
+                    CASE WHEN title LIKE ? THEN 50 ELSE 0 END +            -- starts with
+                    CASE WHEN title LIKE ? THEN 30 ELSE 0 END +            -- full phrase
+                    CASE WHEN title LIKE ? THEN 20 ELSE 0 END +            -- correct order
+                    ($scoreExpression)                                     -- word matches
+                ) DESC
+            ", array_merge(
+                [
+                    $query,
+                    "{$query}%",
+                    "%{$query}%",
+                    $orderedPattern
+                ],
+                $scoreBindings
+            ))
+            // ->orderBy('title')
             ->limit(100)
             ->get();
 
@@ -38,15 +95,16 @@ class RemoteController extends Controller
                 'data' => $localResults,
                 'source' => 'database'
             ]);
-        } else {
-            // $result = $this->searchYoutube($query);
+        }
+        else {
+            $result = $this->searchYoutube($query);
 
-            // return response()->json([
-            //     'message' => 'Results fetched from YouTube.',
-            //     'data' => $result["data"],
-            //     'original_results' => $result["original_results"],
-            //     'source' => 'youtube'
-            // ]);
+            return response()->json([
+                'message' => 'Results fetched from YouTube.',
+                'data' => $result["data"],
+                'original_results' => $result["original_results"],
+                'source' => 'youtube'
+            ]);
         }
     }
 
@@ -238,8 +296,15 @@ class RemoteController extends Controller
 
         foreach ($items as $item) {
             $videoId = $item['id']['videoId'];
+            $title = $item['snippet']['title'];
+            
+            // ✅ Check if title contains "karaoke" (case-insensitive)
+            $hasKaraoke = stripos($title, 'karaoke') !== false;
 
-            // Check if song already exists
+            if (!$hasKaraoke) {
+                continue;
+            }
+
             if (!SongBook::where('code', $videoId)->exists()) {
                 if($item['snippet']['channelId'] !== 'UCwTRjvjVge51X-ILJ4i22ew'){
                     $song = SongBook::create([
