@@ -54,7 +54,7 @@ class User extends Authenticatable
     }
 
     public function karaokes(){
-        return $this->hasMany(Karaoke::class);
+        return $this->hasMany(Karaoke::class)->orderByDesc('last_seen_at');
     }
     
     public function karaoke(){

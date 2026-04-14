@@ -19,6 +19,7 @@ return new class extends Migration
             $table->enum('status', ['pending', 'active', 'inactive'])->default('pending');
             // $table->string('connection_token')->nullable();
             // $table->timestamp('token_expires_at')->nullable();
+            $table->timestamp('last_seen_at')->nullable();
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');

@@ -18,6 +18,14 @@ use function PHPUnit\Framework\isNull;
 
 class KaraokeController extends Controller
 {
+    public function index(Request $request){
+        $user = $request->user();
+
+        $karaokes = Karaoke::where('user_id', $user->id)->orderByDesc('last_seen_at')->get();
+
+        return response()->json($karaokes);
+    }
+
     public function store(Request $request){
         $validated = $request->validate([
             "karaoke_id" => "required|string"
@@ -157,6 +165,20 @@ class KaraokeController extends Controller
 
             throw $e;
         }
+    }
 
+
+    //THIS IS FOR CHECKING IF THE KARAOKE IS STILL ACTIVE
+    public function heartbeat(Request $request)
+    {
+        $validated = $request->validate([
+            "karaoke_id" => "required", //karaoke_id
+        ]);
+
+        Karaoke::where('karaoke_id', $validated["karaoke_id"])->update([
+            "last_seen_at" => now(),
+        ]);
+
+        return response()->json(['status' => 'ok']);
     }
 }
