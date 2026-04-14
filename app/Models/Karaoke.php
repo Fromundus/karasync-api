@@ -40,7 +40,7 @@ class Karaoke extends Model
         // $diff = now()->diffInSeconds($this->last_seen_at);
         $diff = $this->last_seen_at->diffInSeconds(now());
 
-        Log::info($diff);
+        // Log::info($diff);
 
         return $diff < 90;
     }

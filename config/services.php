@@ -44,4 +44,8 @@ return [
     'youtube' => [
         'key' => env('YOUTUBE_API_KEY'),
     ],
+
+    'youtube_service_render' => [
+        'key' => env('YOUTUBE_SERVICE_RENDER_URL'),
+    ],
 ];

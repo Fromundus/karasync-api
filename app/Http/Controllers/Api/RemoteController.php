@@ -11,6 +11,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class RemoteController extends Controller
 {
@@ -97,7 +98,7 @@ class RemoteController extends Controller
             ]);
         }
         else {
-            $result = $this->searchYoutube($query);
+            $result = $this->searchRender($query);
 
             return response()->json([
                 'message' => 'Results fetched from YouTube.',
@@ -143,7 +144,8 @@ class RemoteController extends Controller
     public function youtubeSearch(Request $request){
         $query = $request->input('query');
 
-        $result = $this->searchYoutube($query);
+        // $result = $this->searchYoutube($query);
+        $result = $this->searchRender($query);
 
         return response()->json([
             'message' => 'Results fetched from YouTube.',
@@ -327,6 +329,77 @@ class RemoteController extends Controller
                     'thumbnail' => $item['snippet']['thumbnails']['default']['url'],
                     'title'     => $item['snippet']['title'],
                     'channel'   => $item['snippet']['channelTitle'],
+                    'color'     => $this->generateRandomColor(),
+                    'priority'  => null,
+                ];
+    
+                $result[] = $updatedSongFormat;
+            }
+        }
+
+        return [
+            'data' => $result,
+            'original_results' => $items,
+        ];
+    }
+
+    private function searchRender($query){
+        $youtubeServiceUrl = config('services.youtube_service_render.key');
+
+        $cacheKey = 'yt_search_' . md5($query);
+
+        $response = Cache::remember($cacheKey, now()->addHours(5), function () use ($youtubeServiceUrl, $query) {
+            $res = Http::timeout(60)->retry(3, 2000)->get($youtubeServiceUrl . '/search?q='. $query . 'karaoke OR "karaoke songs" OR "karaoke hits" OR "karaoke playlist"');
+            
+            if ($res->failed()) {
+                return ['items' => []];
+            }
+
+            return $res->json();
+        });
+
+        // Log::info($response);
+
+        $items = $response['items'];
+
+        $saved = [];
+        $result = [];
+
+        foreach ($items as $item) {
+            $videoId = $item['id'];
+            $title = $item['title'];
+            $channelTitle = $item['channelTitle'];
+            $thumbnail = $item['thumbnail']['thumbnails'][0]['url'];
+            
+            // ✅ Check if title contains "karaoke" (case-insensitive)
+            $hasKaraoke = stripos($title, 'karaoke') !== false;
+
+            if (!$hasKaraoke) {
+                continue;
+            }
+
+            if (!SongBook::where('code', $videoId)->exists()) {
+                if($channelTitle !== 'Sing King'){
+                    $song = SongBook::create([
+                        'code'      => $videoId,
+                        'thumbnail' => $thumbnail,
+                        'title'     => $title,
+                        'channel'   => $channelTitle,
+                        'color'     => $this->generateRandomColor(),
+                        'priority'  => null,
+                    ]);
+                    
+                    $saved[] = $song;
+                }
+                
+            }
+
+            if($channelTitle !== 'Sing King'){
+                $updatedSongFormat = [
+                    'code'      => $videoId,
+                    'thumbnail' => $thumbnail,
+                    'title'     => $title,
+                    'channel'   => $channelTitle,
                     'color'     => $this->generateRandomColor(),
                     'priority'  => null,
                 ];
