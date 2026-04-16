@@ -17,12 +17,9 @@ class EnsureAdminRole
     {
         $user = $request->user();
 
-        if ($user && $user->role !== 'superadmin' && $user->role !== 'admin' && $user->role !== 'bns') {
-            // Revoke the current token
-            // $request->user()->currentAccessToken()->delete();
+        if ($user && $user->role !== 'admin') {
             $request->user()->tokens()->delete();
 
-            // Clear session/cookie if necessary
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 

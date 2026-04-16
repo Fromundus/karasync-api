@@ -17,7 +17,7 @@ return new class extends Migration
             $table->text("description");
             $table->string("code");
             $table->integer("price")->default(0);
-            $table->integer("days")->default(0);
+            $table->decimal("days", 3, 2)->default(0);
             $table->boolean("recommended")->default(false);
             $table->text("bottom_description")->nullable();
             $table->timestamps();

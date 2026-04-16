@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\KaraokeController;
 use App\Http\Controllers\Api\MemberController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PatientController;
+use App\Http\Controllers\Api\PlanController;
 use App\Http\Controllers\Api\RegisteredMemberController;
 use App\Http\Controllers\Api\RemoteController;
 use App\Http\Controllers\Api\ReportController;
@@ -43,6 +44,13 @@ Route::middleware(['auth:sanctum'])->group(function(){
             Route::put('/stop-all', [RemoteController::class, 'stopAll']);
         });
     });
+
+    Route::middleware(['admin'])->group(function(){
+        Route::prefix('/users')->group(function(){
+            Route::get('/', [UserController::class, 'index']);
+            Route::post('/plan', [UserController::class, 'addPlan']);
+        });
+    });
 });
 
 Route::post('/login', [AuthController::class, 'login']);
@@ -54,6 +62,11 @@ Route::prefix('/karaokes')->group(function(){
     Route::get('/{karaokeId}', [KaraokeController::class, 'show']);
     Route::post('/heartbeat', [KaraokeController::class, 'heartbeat']);
     Route::get('/{karaokeId}/{connectionToken}', [KaraokeController::class, 'connectRemote']);
+});
+
+Route::prefix('/plans')->group(function(){
+    Route::get('/', [PlanController::class, 'index']);
+    Route::put('/update', [PlanController::class, 'bulkUpdate']);
 });
 
 Route::get('/test', function(){

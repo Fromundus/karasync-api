@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\RemoteControlEvent;
 use App\Http\Controllers\Controller;
+use App\Models\Plan;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -14,46 +16,54 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
-        $search = $request->query('search');
-        $perPage = $request->query('per_page', 10);
-        $role = $request->query('role');
-        $status = $request->query('status'); // "active" or "inactive"
+        $users = User::where('role', '!=', 'remote')->get();
 
-        $query = User::query();
+        return response()->json($users);
+    }
 
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('username', 'like', "%{$search}%")
-                ->orWhere('name', 'like', "%{$search}%")
-                ->orWhere('role', 'like', "%{$search}%")
-                ->orWhere('email', 'like', "%{$search}%");
-            });
+    public function addPlan(Request $request)
+    {
+        $validated = $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'plan_id' => 'nullable|exists:plans,id',
+            'custom' => 'nullable|numeric',
+        ]);
+
+        $user = User::with('karaokes')->findOrFail($validated['user_id']);
+
+        // Determine how many days to add
+        if (!empty($validated['plan_id'])) {
+            $plan = Plan::findOrFail($validated['plan_id']);
+            $daysToAdd = $plan->days;
+        } elseif (!empty($validated['custom'])) {
+            $daysToAdd = $validated['custom'];
+        } else {
+            return response()->json([
+                'message' => 'Either plan_id or custom days is required'
+            ], 422);
         }
 
-        if ($role && $role !== 'all') {
-            $query->where('role', $role);
+        // Handle null expires_at safely
+        $currentExpiry = $user->expires_at
+            ? Carbon::parse($user->expires_at)
+            : now();
+
+        $user->update([
+            'expires_at' => $currentExpiry->addDays((float) $daysToAdd),
+        ]);
+
+        $karaokes = $user->karaokes;
+
+        foreach($karaokes as $karaoke){
+            broadcast(new RemoteControlEvent(
+                $karaoke->karaoke_id,
+                "subscribe"
+            ))->toOthers();
         }
-
-        if ($status && $status !== 'all') {
-            if ($status === 'active') {
-                $query->where('status', 'active');
-            } elseif ($status === 'inactive') {
-                $query->where('status', 'inactive')->orWhereNull('status');
-            }
-        }
-
-        $users = $query->where("role", "bns")->orderBy('id', 'desc')->paginate($perPage);
-
-        $roleCounts = [
-            'total'      => User::count(),
-            'superadmin' => User::where('role', 'superadmin')->count(),
-            'admin'      => User::where('role', 'admin')->count(),
-            'driver'       => User::where('role', 'driver')->count(),
-        ];
 
         return response()->json([
-            'users' => $users,
-            'counts' => $roleCounts,
+            'message' => 'Added successfully',
+            'expires_at' => $user->expires_at,
         ]);
     }
 
