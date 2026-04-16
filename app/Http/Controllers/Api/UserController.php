@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Events\RemoteControlEvent;
+use App\Events\UserEvent;
 use App\Http\Controllers\Controller;
 use App\Models\Plan;
 use App\Models\User;
@@ -45,7 +46,7 @@ class UserController extends Controller
 
         // Handle null expires_at safely
         $currentExpiry = $user->expires_at
-            ? Carbon::parse($user->expires_at)
+            ? ( $user->subscription_status ? Carbon::parse($user->expires_at) : now() )
             : now();
 
         $user->update([
@@ -61,9 +62,45 @@ class UserController extends Controller
             ))->toOthers();
         }
 
+        broadcast(new UserEvent(
+            $user->id,
+            "fetch"
+        ))->toOthers();
+
         return response()->json([
             'message' => 'Added successfully',
             'expires_at' => $user->expires_at,
+        ]);
+    }
+
+    public function addUnlimited(Request $request)
+    {
+        $validated = $request->validate([
+            'user_id' => 'required|exists:users,id',
+        ]);
+
+        $user = User::with('karaokes')->findOrFail($validated['user_id']);
+
+        $user->update([
+            'expires_at' => null,
+        ]);
+
+        $karaokes = $user->karaokes;
+
+        foreach($karaokes as $karaoke){
+            broadcast(new RemoteControlEvent(
+                $karaoke->karaoke_id,
+                "subscribe"
+            ))->toOthers();
+        }
+
+        broadcast(new UserEvent(
+            $user->id,
+            "fetch"
+        ))->toOthers();
+
+        return response()->json([
+            'message' => 'Added successfully',
         ]);
     }
 

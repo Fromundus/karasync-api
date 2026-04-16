@@ -49,6 +49,7 @@ Route::middleware(['auth:sanctum'])->group(function(){
         Route::prefix('/users')->group(function(){
             Route::get('/', [UserController::class, 'index']);
             Route::post('/plan', [UserController::class, 'addPlan']);
+            Route::post('/unlimited', [UserController::class, 'addUnlimited']);
         });
     });
 });
@@ -62,6 +63,10 @@ Route::prefix('/karaokes')->group(function(){
     Route::get('/{karaokeId}', [KaraokeController::class, 'show']);
     Route::post('/heartbeat', [KaraokeController::class, 'heartbeat']);
     Route::get('/{karaokeId}/{connectionToken}', [KaraokeController::class, 'connectRemote']);
+});
+
+Route::prefix('/remote')->group(function(){
+    Route::put('/next', [RemoteController::class, 'next']);
 });
 
 Route::prefix('/plans')->group(function(){

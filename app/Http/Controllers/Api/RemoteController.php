@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Events\RemoteControlEvent;
+use App\Events\UserEvent;
 use App\Http\Controllers\Controller;
 use App\Models\Karaoke;
 use App\Models\Song;
@@ -201,11 +202,18 @@ class RemoteController extends Controller
             "status" => "played"
         ]);
 
-        $karaoke = Karaoke::findOrFail($validated["karaoke_id"]);
+        $karaoke = Karaoke::with('user')->findOrFail($validated["karaoke_id"]);
+
+        $user = $karaoke->user;
 
         broadcast(new RemoteControlEvent(
             $karaoke->karaoke_id,
             "stop"
+        ))->toOthers();
+
+        broadcast(new UserEvent(
+            $user->id,
+            "fetch"
         ))->toOthers();
 
         return response()->json([
