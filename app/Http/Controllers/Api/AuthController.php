@@ -5,9 +5,12 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+
+use function Symfony\Component\Clock\now;
 
 class AuthController extends Controller
 {
@@ -25,6 +28,7 @@ class AuthController extends Controller
             'password' => Hash::make($validated["password"]),
             'role' => 'user',
             'status' => 'active',
+            'expires_at' => Carbon::now()->addHour(),
         ]);
 
         $token = $user->createToken('api_token')->plainTextToken;
@@ -98,7 +102,7 @@ class AuthController extends Controller
 
     public function me(Request $request)
     {
-        $user = User::findOrFail($request->user()->id);
+        $user = User::with('karaoke.user')->findOrFail($request->user()->id);
 
         return response()->json($user);
     }

@@ -32,6 +32,17 @@ Route::middleware(['auth:sanctum'])->group(function(){
         Route::put('/{karaokeId}', [KaraokeController::class, 'update']);
         Route::delete('/{karaoke}', [KaraokeController::class, 'delete']);
     });
+
+    Route::middleware(['subscribed'])->group(function(){
+        Route::prefix('/remote')->group(function(){
+            Route::post('/', [RemoteController::class, 'remote']); // for the button actions
+            Route::get('/search', [RemoteController::class, 'search']);
+            Route::get('/search/youtube', [RemoteController::class, 'youtubeSearch']);
+            Route::post('/reserve', [RemoteController::class, 'reserve']);
+            Route::put('/next', [RemoteController::class, 'next']);
+            Route::put('/stop-all', [RemoteController::class, 'stopAll']);
+        });
+    });
 });
 
 Route::post('/login', [AuthController::class, 'login']);
@@ -39,19 +50,10 @@ Route::post('remote-login', [AuthController::class, 'remoteLogin']);
 Route::post('/register', [AuthController::class, 'register']);
 
 Route::prefix('/karaokes')->group(function(){
-    Route::post('/', [KaraokeController::class, 'store']);
+    Route::get('/save/{karaokeId}', [KaraokeController::class, 'store']);
     Route::get('/{karaokeId}', [KaraokeController::class, 'show']);
     Route::post('/heartbeat', [KaraokeController::class, 'heartbeat']);
     Route::get('/{karaokeId}/{connectionToken}', [KaraokeController::class, 'connectRemote']);
-});
-
-Route::prefix('/remote')->group(function(){
-    Route::post('/', [RemoteController::class, 'remote']); // for the button actions
-    Route::get('/search', [RemoteController::class, 'search']);
-    Route::get('/search/youtube', [RemoteController::class, 'youtubeSearch']);
-    Route::post('/reserve', [RemoteController::class, 'reserve']);
-    Route::put('/next', [RemoteController::class, 'next']);
-    Route::put('/stop-all', [RemoteController::class, 'stopAll']);
 });
 
 Route::get('/test', function(){

@@ -6,7 +6,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Log;
 use Laravel\Sanctum\HasApiTokens;
+
+use function Symfony\Component\Clock\now;
 
 class User extends Authenticatable
 {
@@ -18,6 +21,10 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
+    protected $appends = [
+        'subscription_status',
+    ];
+
     protected $fillable = [
         'karaoke_id',
         'name',
@@ -28,6 +35,13 @@ class User extends Authenticatable
         'provider_id',
         'avatar',
         'status',
+
+        'karaoke_limit',
+        'expires_at',
+    ];
+
+    protected $casts = [
+        'expires_at' => 'datetime',
     ];
 
     /**
@@ -59,5 +73,15 @@ class User extends Authenticatable
     
     public function karaoke(){
         return $this->belongsTo(Karaoke::class, 'karaoke_id', 'karaoke_id');
+    }
+
+    public function getSubscriptionStatusAttribute(){
+        if(!$this->expires_at) return true;
+
+        $diff = $this->expires_at->diffInSeconds(now());
+
+        // Log::info($diff);
+
+        return $diff < 0;
     }
 }

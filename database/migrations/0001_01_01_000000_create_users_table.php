@@ -23,6 +23,9 @@ return new class extends Migration
             $table->string('provider_id')->nullable();
             $table->string('avatar')->nullable();
             $table->string('status')->default('active');
+
+            $table->integer('karaoke_limit')->default(3);
+            $table->timestamp('expires_at')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

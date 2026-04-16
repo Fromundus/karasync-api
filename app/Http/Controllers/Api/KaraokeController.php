@@ -26,16 +26,12 @@ class KaraokeController extends Controller
         return response()->json($karaokes);
     }
 
-    public function store(Request $request){
-        $validated = $request->validate([
-            "karaoke_id" => "required|string"
-        ]);
-
+    public function store(Request $request, $karaokeId){
         $karaoke = Karaoke::firstOrCreate([
-            'karaoke_id' => $validated["karaoke_id"]
+            'karaoke_id' => $karaokeId,
         ]);
 
-        $karaoke = Karaoke::find($karaoke->id);
+        $karaoke = Karaoke::with(['unplayedSongs', 'user'])->find($karaoke->id);
 
         return response()->json($karaoke);
     }
@@ -136,7 +132,7 @@ class KaraokeController extends Controller
     }
 
     public function show($karaokeId){
-        $karaoke = Karaoke::with('unplayedSongs')->where('karaoke_id', $karaokeId)->firstOrFail();
+        $karaoke = Karaoke::with(['unplayedSongs', 'user'])->where('karaoke_id', $karaokeId)->firstOrFail();
 
         return response()->json($karaoke);
     }
