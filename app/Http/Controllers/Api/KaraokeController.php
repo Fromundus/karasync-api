@@ -21,8 +21,12 @@ class KaraokeController extends Controller
     public function index(Request $request){
         $user = $request->user();
 
-        $karaokes = Karaoke::where('user_id', $user->id)->orderByDesc('last_seen_at')->get();
-
+        if($user->role === "user"){
+            $karaokes = Karaoke::where('user_id', $user->id)->orderByDesc('last_seen_at')->get();
+        } else if ($user->role === "admin"){
+            $karaokes = Karaoke::orderByDesc('last_seen_at')->get();
+        }
+        
         return response()->json($karaokes);
     }
 
