@@ -356,8 +356,10 @@ class RemoteController extends Controller
 
         $cacheKey = 'yt_search_' . md5($query);
 
-        $response = Cache::remember($cacheKey, now()->addHours(5), function () use ($youtubeServiceUrl, $query) {
-            $res = Http::timeout(60)->retry(3, 2000)->get($youtubeServiceUrl . '/search?q='. $query . 'karaoke OR "karaoke songs" OR "karaoke hits" OR "karaoke playlist"');
+        $response = Cache::remember($cacheKey, now()->addHours(1), function () use ($youtubeServiceUrl, $query) {
+            // $res = Http::timeout(60)->retry(3, 2000)->get($youtubeServiceUrl . '/search?q='. $query . 'karaoke OR "karaoke songs" OR "karaoke hits" OR "karaoke playlist"');
+
+            $res = Http::timeout(60)->retry(3, 2000)->get($youtubeServiceUrl . '/search?q='. $query . 'karaoke');
             
             if ($res->failed()) {
                 return ['items' => []];

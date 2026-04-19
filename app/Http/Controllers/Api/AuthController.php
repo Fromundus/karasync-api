@@ -102,7 +102,7 @@ class AuthController extends Controller
 
     public function me(Request $request)
     {
-        $user = User::with('karaoke.user')->findOrFail($request->user()->id);
+        $user = User::with(['karaoke.user', 'pendingPayment'])->findOrFail($request->user()->id);
 
         return response()->json($user);
     }

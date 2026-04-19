@@ -23,5 +23,9 @@ class DatabaseSeeder extends Seeder
             'role' => 'admin',
             'status' => 'active',
         ]);
+
+        $this->call([
+            PlanSeeder::class,
+        ]);
     }
 }

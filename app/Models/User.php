@@ -84,4 +84,8 @@ class User extends Authenticatable
 
         return $diff < 0;
     }
+
+    public function pendingPayment(){
+        return $this->hasOne(Payment::class)->where('status', 'pending');
+    }
 }

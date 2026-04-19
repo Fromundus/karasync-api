@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\KaraokeController;
 use App\Http\Controllers\Api\MemberController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PatientController;
+use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PlanController;
 use App\Http\Controllers\Api\RegisteredMemberController;
 use App\Http\Controllers\Api\RemoteController;
@@ -43,6 +44,10 @@ Route::middleware(['auth:sanctum'])->group(function(){
             Route::put('/next', [RemoteController::class, 'next']);
             Route::put('/stop-all', [RemoteController::class, 'stopAll']);
         });
+    });
+
+    Route::prefix('/payments')->group(function(){
+        Route::post('/', [PaymentController::class, 'store']);
     });
 
     Route::middleware(['admin'])->group(function(){
