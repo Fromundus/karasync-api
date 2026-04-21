@@ -104,6 +104,37 @@ class UserController extends Controller
         ]);
     }
 
+    public function expire(Request $request)
+    {
+        $validated = $request->validate([
+            'user_id' => 'required|exists:users,id',
+        ]);
+
+        $user = User::with('karaokes')->findOrFail($validated['user_id']);
+
+        $user->update([
+            'expires_at' => now(),
+        ]);
+
+        $karaokes = $user->karaokes;
+
+        foreach($karaokes as $karaoke){
+            broadcast(new RemoteControlEvent(
+                $karaoke->karaoke_id,
+                "subscribe"
+            ))->toOthers();
+        }
+
+        broadcast(new UserEvent(
+            $user->id,
+            "fetch"
+        ))->toOthers();
+
+        return response()->json([
+            'message' => 'Updated successfully',
+        ]);
+    }
+
     public function updatePassword(Request $request){
         $validated = $request->validate([
             "password" => "string|confirmed|max:255"

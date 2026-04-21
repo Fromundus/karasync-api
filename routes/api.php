@@ -61,6 +61,7 @@ Route::middleware(['auth:sanctum'])->group(function(){
             Route::get('/', [UserController::class, 'index']);
             Route::post('/plan', [UserController::class, 'addPlan']);
             Route::post('/unlimited', [UserController::class, 'addUnlimited']);
+            Route::post('/expire', [UserController::class, 'expire']);
         });
 
         // Route::prefix('/payments')->group(function(){

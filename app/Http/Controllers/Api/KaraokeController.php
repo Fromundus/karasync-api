@@ -22,9 +22,9 @@ class KaraokeController extends Controller
         $user = $request->user();
 
         if($user->role === "user"){
-            $karaokes = Karaoke::where('user_id', $user->id)->orderByDesc('last_seen_at')->get();
+            $karaokes = Karaoke::with(["user"])->where('user_id', $user->id)->orderByDesc('last_seen_at')->get();
         } else if ($user->role === "admin"){
-            $karaokes = Karaoke::orderByDesc('last_seen_at')->get();
+            $karaokes = Karaoke::with(["user"])->orderByDesc('last_seen_at')->get();
         }
         
         return response()->json($karaokes);
