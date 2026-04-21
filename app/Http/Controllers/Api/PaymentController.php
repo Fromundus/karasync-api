@@ -5,11 +5,18 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Payment;
 use App\Services\FileService;
+use App\Services\ReferenceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class PaymentController extends Controller
 {
+    public function index(){
+        $payments = Payment::with('user')->get();
+
+        return response()->json($payments);
+    }
+
     public function store(Request $request, FileService $fileService)
     {
         $validated = $request->validate([
@@ -29,6 +36,7 @@ class PaymentController extends Controller
                 'base_price' => $validated["base_price"],
                 'amount' => $validated["amount"],
                 'days' => $validated["days"],
+                'reference_number' => ReferenceService::generate(),
             ]);
 
             if ($request->hasFile('files')) {

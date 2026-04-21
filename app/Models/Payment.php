@@ -12,6 +12,7 @@ class Payment extends Model
         'amount',
         "days",
         'status',
+        'reference_number',
     ];
 
     public function files()
