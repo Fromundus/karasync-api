@@ -17,7 +17,8 @@ return new class extends Migration
             $table->decimal('base_price', 8, 2)->default(0);
             $table->decimal('amount', 8, 2)->default(0);
             $table->decimal("days", 8, 2)->default(0);
-            $table->enum('status', ['pending', 'verified', 'refunded'])->default('pending');
+            $table->decimal("custom_days", 8, 2)->nullable();
+            $table->enum('status', ['pending', 'verified', 'refunded', 'cancelled'])->default('pending');
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');

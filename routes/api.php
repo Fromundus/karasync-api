@@ -57,6 +57,10 @@ Route::middleware(['auth:sanctum'])->group(function(){
             Route::post('/plan', [UserController::class, 'addPlan']);
             Route::post('/unlimited', [UserController::class, 'addUnlimited']);
         });
+
+        Route::prefix('/payments')->group(function(){
+            Route::put('/status', [PaymentController::class, 'updateStatus']);
+        });
     });
 });
 
@@ -85,3 +89,14 @@ Route::get('/test', function(){
         "message" => "success"
     ], 200);
 });
+
+//FILES
+Route::get('/files/{filename}', function ($filename) {
+    $path = storage_path('app/public/' . $filename);
+
+    if (!\File::exists($path)) {
+        abort(404);
+    }
+
+    return response()->file($path);
+})->where('filename', '.*');

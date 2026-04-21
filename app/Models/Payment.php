@@ -11,6 +11,7 @@ class Payment extends Model
         'base_price',
         'amount',
         "days",
+        "custom_days",
         'status',
         'reference_number',
     ];
