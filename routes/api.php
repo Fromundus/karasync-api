@@ -49,6 +49,11 @@ Route::middleware(['auth:sanctum'])->group(function(){
     Route::prefix('/payments')->group(function(){
         Route::get('/', [PaymentController::class, 'index']);
         Route::post('/', [PaymentController::class, 'store']);
+        Route::put('/status', [PaymentController::class, 'updateStatus']);
+    });
+
+    Route::prefix('/users')->group(function(){
+        Route::put('/password', [UserController::class, 'updatePassword']);
     });
 
     Route::middleware(['admin'])->group(function(){
@@ -58,9 +63,8 @@ Route::middleware(['auth:sanctum'])->group(function(){
             Route::post('/unlimited', [UserController::class, 'addUnlimited']);
         });
 
-        Route::prefix('/payments')->group(function(){
-            Route::put('/status', [PaymentController::class, 'updateStatus']);
-        });
+        // Route::prefix('/payments')->group(function(){
+        // });
     });
 });
 

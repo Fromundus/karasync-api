@@ -15,8 +15,16 @@ use Illuminate\Support\Facades\DB;
 
 class PaymentController extends Controller
 {
-    public function index(){
-        $payments = Payment::with(['user', 'files'])->get();
+    public function index(Request $request){
+        $query = Payment::with(['user', 'files'])->orderByDesc('created_at');
+
+        $user = $request->user();
+
+        if($user->role === "user"){
+            $payments = $query->where('user_id', $user->id)->get();
+        } else {
+            $payments = $query->get();
+        }
 
         return response()->json($payments);
     }
@@ -116,6 +124,10 @@ class PaymentController extends Controller
     
                     $user->update([
                         'expires_at' => $currentExpiry->addDays((float) $daysToAdd),
+                    ]);
+                } else if($validated["status"] === "cancelled"){
+                    $payment->update([
+                        "status" => $validated["status"],
                     ]);
                 }
             }

@@ -104,6 +104,24 @@ class UserController extends Controller
         ]);
     }
 
+    public function updatePassword(Request $request){
+        $validated = $request->validate([
+            "password" => "string|confirmed|max:255"
+        ]);
+
+        $userId = $request->user()->id;
+
+        $user = User::findOrFail($userId);
+
+        $user->update([
+            "password" => Hash::make($validated["password"]),
+        ]);
+
+        return response()->json([
+            "message" => "Password Updated Successfully"
+        ], 201);
+    }
+
     public function store(Request $request)
     {
         $request->validate([
