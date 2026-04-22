@@ -27,7 +27,6 @@ class EnsureUserIsSubscribed
             }
         }
 
-
         return $next($request);
     }
 }

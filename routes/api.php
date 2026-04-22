@@ -29,6 +29,7 @@ Route::middleware(['auth:sanctum'])->group(function(){
 
     Route::prefix('/karaokes')->group(function(){
         Route::get('/', [KaraokeController::class, 'index']);
+        Route::get('/{karaokeId}', [KaraokeController::class, 'show']);
         Route::get('/scan/{karaokeId}', [KaraokeController::class, 'scan']);
         Route::post('/register', [KaraokeController::class, 'register']);
         Route::put('/{karaokeId}', [KaraokeController::class, 'update']);
@@ -75,9 +76,7 @@ Route::post('/register', [AuthController::class, 'register']);
 
 Route::prefix('/karaokes')->group(function(){
     Route::get('/save/{karaokeId}', [KaraokeController::class, 'store']);
-    Route::get('/{karaokeId}', [KaraokeController::class, 'show']);
     Route::post('/heartbeat', [KaraokeController::class, 'heartbeat']);
-    Route::get('/{karaokeId}/{connectionToken}', [KaraokeController::class, 'connectRemote']);
 });
 
 Route::prefix('/remote')->group(function(){

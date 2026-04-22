@@ -135,8 +135,17 @@ class KaraokeController extends Controller
         return response()->json($karaoke);
     }
 
-    public function show($karaokeId){
+    public function show(Request $request, $karaokeId){
         $karaoke = Karaoke::with(['unplayedSongs', 'user'])->where('karaoke_id', $karaokeId)->firstOrFail();
+        $user = $request->user();
+
+        if($user->role === "user"){
+            if($karaoke->user_id !== $user->id){
+                return response()->json([
+                    "message" => "Unauthorized"
+                ], 401);
+            }
+        }
 
         return response()->json($karaoke);
     }
