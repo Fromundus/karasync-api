@@ -23,6 +23,7 @@ class User extends Authenticatable
      */
     protected $appends = [
         'subscription_status',
+        'karaoke_limit_reached',
     ];
 
     protected $fillable = [
@@ -84,6 +85,17 @@ class User extends Authenticatable
 
         return $diff < 0;
     }
+
+    public function getKaraokeLimitReachedAttribute(){
+        if($this->karaoke_limit == 0) return false;
+
+        $karaokes_count = $this->karaokes->count();
+
+        $karaokeLimit = $this->karaoke_limit;
+
+        return $karaokes_count >= $karaokeLimit;
+    }
+
 
     public function pendingPayment(){
         return $this->hasOne(Payment::class)->where('status', 'pending');

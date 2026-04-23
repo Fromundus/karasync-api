@@ -41,6 +41,12 @@ class KaraokeController extends Controller
     }
 
     public function register(Request $request){
+        $user = $request->user();
+
+        if($user->karaoke_limit_reached){
+            return response()->json([], 402);
+        }
+
         $validated = $request->validate([
             "karaoke_id" => "required|string",
             "name" => "required|string|max:100",
@@ -129,7 +135,13 @@ class KaraokeController extends Controller
         }
     }
 
-    public function scan($karaokeId){
+    public function scan(Request $request, $karaokeId){
+        $user = $request->user();
+
+        if($user->karaoke_limit_reached){
+            return response()->json([], 402);
+        }
+
         $karaoke = Karaoke::where('karaoke_id', $karaokeId)->where('status', 'pending')->firstOrFail();
 
         return response()->json($karaoke);
