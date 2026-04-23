@@ -135,6 +135,29 @@ class UserController extends Controller
         ]);
     }
 
+    public function updateKaraokeLimit(Request $request)
+    {
+        $validated = $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'karaoke_limit' => 'required|numeric|min:0',
+        ]);
+
+        $user = User::findOrFail($validated['user_id']);
+
+        $user->update([
+            'karaoke_limit' => $validated['karaoke_limit'],
+        ]);
+        
+        broadcast(new UserEvent(
+            $user->id,
+            "fetch"
+        ))->toOthers();
+
+        return response()->json([
+            'message' => 'Updated successfully',
+        ]);
+    }
+
     public function updatePassword(Request $request){
         $validated = $request->validate([
             "password" => "string|confirmed|max:255"

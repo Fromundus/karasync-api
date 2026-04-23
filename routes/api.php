@@ -61,6 +61,7 @@ Route::middleware(['auth:sanctum'])->group(function(){
         Route::prefix('/users')->group(function(){
             Route::get('/', [UserController::class, 'index']);
             Route::post('/plan', [UserController::class, 'addPlan']);
+            Route::put('/karaoke-limit', [UserController::class, 'updateKaraokeLimit']);
             Route::post('/unlimited', [UserController::class, 'addUnlimited']);
             Route::post('/expire', [UserController::class, 'expire']);
         });
