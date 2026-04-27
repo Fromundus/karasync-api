@@ -121,7 +121,7 @@ class UserController extends Controller
         foreach($karaokes as $karaoke){
             broadcast(new RemoteControlEvent(
                 $karaoke->karaoke_id,
-                "subscribe"
+                "delete"
             ))->toOthers();
         }
 
@@ -132,6 +132,30 @@ class UserController extends Controller
 
         return response()->json([
             'message' => 'Updated successfully',
+        ]);
+    }
+
+    public function destroy(Request $request, $id)
+    {
+        $user = User::with('karaokes')->findOrFail($id);
+        $karaokes = $user->karaokes;
+
+        $user->delete();
+
+        foreach($karaokes as $karaoke){
+            broadcast(new RemoteControlEvent(
+                $karaoke->karaoke_id,
+                "delete"
+            ))->toOthers();
+        }
+
+        broadcast(new UserEvent(
+            $user->id,
+            "fetch"
+        ))->toOthers();
+
+        return response()->json([
+            'message' => 'Deleted successfully',
         ]);
     }
 
@@ -335,21 +359,4 @@ class UserController extends Controller
 
         return response()->json(["message" => "Password Reset Success"], 200);
     }
-
-    public function delete(Request $request){
-        $validated = $request->validate([
-            'ids' => 'required|array',
-        ]);
-
-        $users = User::whereIn('id', $validated['ids'])->get();
-
-        User::whereIn('id', $validated['ids'])->delete();
-
-        // foreach($users as $user){
-        //     ActivityLogger::log('delete', 'account', "Deleted account: #" . $user->id . " " . $user->name);
-        // }
-
-        return response()->json(['message' => 'Users deleted successfully']);
-    }
-
 }
