@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make(1234),
             'role' => 'admin',
             'status' => 'active',
+            'karaoke_limit' => 0,
         ]);
 
         $this->call([

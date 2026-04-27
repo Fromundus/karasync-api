@@ -143,6 +143,8 @@ class UserController extends Controller
         $user->delete();
 
         foreach($karaokes as $karaoke){
+            User::where('role', 'remote')->where('karaoke_id', $karaoke->karaoke_id)->delete();
+
             broadcast(new RemoteControlEvent(
                 $karaoke->karaoke_id,
                 "delete"

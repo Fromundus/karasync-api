@@ -24,7 +24,7 @@ return new class extends Migration
             $table->string('avatar')->nullable();
             $table->string('status')->default('active');
 
-            $table->integer('karaoke_limit')->default(3);
+            $table->integer('karaoke_limit')->default(1);
             $table->timestamp('expires_at')->nullable();
             $table->rememberToken();
             $table->timestamps();
