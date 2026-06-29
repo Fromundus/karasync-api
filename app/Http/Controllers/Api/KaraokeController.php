@@ -35,7 +35,7 @@ class KaraokeController extends Controller
             'karaoke_id' => $karaokeId,
         ]);
 
-        $karaoke = Karaoke::with(['unplayedSongs', 'user'])->find($karaoke->id);
+        $karaoke = Karaoke::with(['unplayedSongs', 'playedSongs', 'user'])->find($karaoke->id);
 
         return response()->json($karaoke);
     }
@@ -148,7 +148,7 @@ class KaraokeController extends Controller
     }
 
     public function show(Request $request, $karaokeId){
-        $karaoke = Karaoke::with(['unplayedSongs', 'user'])->where('karaoke_id', $karaokeId)->firstOrFail();
+        $karaoke = Karaoke::with(['unplayedSongs', 'playedSongs', 'user'])->where('karaoke_id', $karaokeId)->firstOrFail();
         $user = $request->user();
 
         if($user->role === "user"){

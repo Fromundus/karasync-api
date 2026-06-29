@@ -29,6 +29,10 @@ class Karaoke extends Model
         return $this->hasMany(Song::class)->where('status', 'unplayed');
     }
 
+    public function playedSongs(){
+        return $this->hasMany(Song::class)->where('status', 'played')->orderByDesc('created_at')->limit(20);
+    }
+
     public function remote(){
         return $this->hasOne(User::class, 'karaoke_id', 'karaoke_id')->where('role', 'remote');
     }
